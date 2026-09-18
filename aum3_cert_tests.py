@@ -348,6 +348,16 @@ def anchor_info(a):
                   "-servername", a.sni or a.host, "-showcerts"], timeout=a.timeout)
     blocks = re.findall(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", out, re.S)
     if not blocks:
+        # 离线（设备/对端暂时连不上）时允许复用上次采到的证书，方便先批量生成错误证书
+        for cached in ("device_cert.pem", "anchor_leaf.pem"):
+            p = os.path.join(a.certs_dir, cached)
+            if os.path.exists(p):
+                log("[warn] 现场抓不到 %s:%d 的证书，改用已缓存 %s（离线生成证书用；请确认它仍是当前证书）"
+                    % (a.host, a.port, p))
+                with open(p, encoding="ascii") as fh:
+                    blocks = [fh.read().strip()]
+                break
+    if not blocks:
         return None
     leaf = os.path.join(a.certs_dir, "anchor_leaf.pem")
     with open(leaf, "w", encoding="ascii") as fh:
