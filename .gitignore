@@ -1,0 +1,20 @@
+# 证据与密钥材料一律不入库
+evidence/
+*-certs/
+*.pcap
+*.pcapng
+*.pem
+*.key
+*.crt
+*.csr
+*.crl
+*.srl
+*.mitm
+flows_*
+# 客户/项目资料
+*.docx
+*.xlsx
+*.univer
+# Python
+__pycache__/
+*.pyc
