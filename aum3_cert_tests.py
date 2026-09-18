@@ -80,6 +80,36 @@ MITMDUMP = os.environ.get("MITMDUMP_BIN", "mitmdump")
          weaker_alerts={"unknown_ca", "handshake_failure"}),
 ]
 
+# 鏈嶅姟绔嫇鎵戯紙DUT 浣?TLS 鏈嶅姟绔紝鏈湴 web TLS 鏈嶅姟鍑虹ず璇佷功缁?web 绠＄悊瀹㈡埛绔級涓嬬殑鐢ㄤ緥锛?# 杩欎竴鎷撴墤閲?鍑虹ず璇佷功"鐨勬槸 DUT 鑷繁锛屾墍浠ュ洓鏉?bullet 钀藉埌涓や欢浜嬩笂锛?#   鈶?璁惧鑷韩璇佷功鐨勫睘鎬ф槸鍚﹀悎瑙勩€佽兘鍚﹁"浼€?鍐掔敤"锛圫0 鍩虹嚎 + S1 閿欒绉侀挜 + S3a/b/c/S4 鍐掔敤瀹為獙锛?#   鈶?鑻ヨ澶囪姹傚鎴风璇佷功锛坢TLS锛夛紝鎵嶆湁"璁惧鏍￠獙瀵圭璇佷功"鐨勮矾寰勶紙鑴氭湰浼氭墦鍗版帰娴嬬粨鏋滐級
+SERVER_REQS = [
+    dict(id="S0", clause="baseline / AuthVal: the certificate the local web TLS service presents",
+         title="閲囬泦璁惧鏈湴 web TLS 鏈嶅姟鍑虹ず鐨勮瘉涔︿笌 TLS 鍙傛暟锛屾牳瀵?E-Info 鏂囨。",
+         cert=None, runner="probe", app="always", specific_alerts=set(), weaker_alerts=set()),
+    dict(id="S1", clause="bullet1 incorrect private keys to a trusted certificate",
+         title="璁惧鑷韩璇佷功 + 鏀诲嚮鑰呯閽ワ細鑳藉惁鎹鍐掑厖璇ヨ澶囷紙鏈満 openssl 澶嶇幇锛?,
+         cert=None, runner="mismatch_key", app="always",
+         specific_alerts={"key_values_mismatch"}, weaker_alerts=set()),
+    dict(id="S2", clause="bullet2 replay of a recorded successful authentication attempt",
+         title="閲嶆斁宸茶褰曠殑鎴愬姛璁よ瘉锛堟潯浠堕」锛?,
+         cert=None, runner="replay", app="cond:confidentiality", specific_alerts=set(), weaker_alerts=set()),
+    dict(id="S3a", clause="bullet3 NOTE invalid chain of trust (untrusted entity, expected CN)",
+         title="浠ヨ澶囪韩浠?+ 涓嶅彈淇′换閾剧殑璇佷功鍐掑厖璇ヨ澶囷紝鏍￠獙鍨嬪鎴风鏄惁鎺ュ彈",
+         cert="c3a_untrusted_ca", cert_key="R3a", runner="impersonate", app="always",
+         specific_alerts=set(), weaker_alerts=set()),
+    dict(id="S3b", clause="bullet3 NOTE expired certificates",
+         title="浠ヨ澶囪韩浠?+ 宸茶繃鏈熺殑璇佷功鍐掑厖璇ヨ澶囷紝鏍￠獙鍨嬪鎴风鏄惁鎺ュ彈",
+         cert="c3b_expired", cert_key="R3b", runner="impersonate", app="always",
+         specific_alerts=set(), weaker_alerts=set()),
+    dict(id="S3c", clause="bullet3 NOTE certificates revoked by the CA",
+         title="浠ヨ澶囪韩浠?+ 宸插悐閿€鐨勮瘉涔﹀啋鍏呰璁惧锛屾牎楠屽瀷瀹㈡埛绔槸鍚︽帴鍙?,
+         cert="c3c_revoked", cert_key="R3c", runner="impersonate", app="always",
+         specific_alerts=set(), weaker_alerts=set()),
+    dict(id="S4", clause="bullet4 trusted certificate of other entities",
+         title="浠ュ彟涓€瀹炰綋鐨勮瘉涔﹀啋鍏呰璁惧锛屾牎楠屽瀷瀹㈡埛绔槸鍚︽帴鍙?,
+         cert="c4_other_entity", cert_key="R4", runner="impersonate", app="cond:accounts",
+         specific_alerts=set(), weaker_alerts=set()),
+]
+
 ALERT_NAMES = {0: "close_notify", 40: "handshake_failure", 42: "bad_certificate",
                43: "unsupported_certificate", 44: "certificate_revoked", 45: "certificate_expired",
                46: "certificate_unknown", 47: "illegal_parameter", 48: "unknown_ca",
@@ -93,6 +123,13 @@ TDS_SENTENCE = {
     "R3b": "鍑虹ず CN/SAN 涓庢湡鏈涘€间竴鑷淬€佷絾宸茶繃鏈熺殑璇佷功锛孌UT 鎷掔粷璇ヨ瘉涔?,
     "R3c": "鍑虹ず鐢?CA 绛惧彂鍚庡悐閿€锛圕RL 宸插垪鍑鸿搴忓垪鍙凤級鐨勮瘉涔︼紝DUT 鎷掔粷璇ヨ瘉涔?,
     "R4": "鍑虹ず鍚屼竴鍙椾俊浠?CA 涓嬪彟涓€涓疄浣撶殑鍚堟硶璇佷功锛孌UT 鎷掔粷璇ヨ瘉涔?,
+    "S0": "閲囬泦璁惧鏈湴 web TLS 鏈嶅姟鍑虹ず鐨勮瘉涔︿笌 TLS 鍙傛暟锛屼笌 E-Info 鏂囨。涓€鑷达紙鏃犲亸宸」锛?,
+    "S1": "璁惧鑷韩璇佷功涓庢敾鍑昏€呯閽ユ棤娉曟瀯鎴愬彲鐢ㄧ鐐癸紙鍔犺浇鍗?key values mismatch锛夛紝璇ヨ瘉涔︿笉鍙鍐掔敤",
+    "S2": "璁よ瘉娑堟伅缁忕綉缁滄帴鍙ｄ紶杈撶殑鏈哄瘑鎬х敱 TLS 淇濇姢锛屾爣鍑嗚鏉′负鏉′欢椤癸紝鍒ゅ畾 N/A锛堢悊鐢辫涓嬶級",
+    "S3a": "浠ヨ澶囪韩浠?+ 涓嶅彈淇′换閾剧殑璇佷功鏃犳硶璁╂牎楠屽瀷瀹㈡埛绔畬鎴愬埌璇ヨ澶囩殑璁よ瘉",
+    "S3b": "浠ヨ澶囪韩浠?+ 宸茶繃鏈熺殑璇佷功鏃犳硶璁╂牎楠屽瀷瀹㈡埛绔畬鎴愬埌璇ヨ澶囩殑璁よ瘉",
+    "S3c": "浠ヨ澶囪韩浠?+ 宸插悐閿€鐨勮瘉涔︽棤娉曡鏍￠獙鍨嬪鎴风瀹屾垚鍒拌璁惧鐨勮璇?,
+    "S4": "浠ュ彟涓€瀹炰綋鐨勮瘉涔︽棤娉曞啋鐢ㄨ璁惧瀹屾垚璁よ瘉",
 }
 
 
@@ -813,6 +850,9 @@ def write_outputs(a, results):
     stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = ["# [AU.AUM-3.CertificatePrivateKey] 鍙栬瘉 summary", "",
              "- 鏃堕棿: " + stamp,
+             "- 鎷撴墤: %s" % ("server锛圖UT 浣?TLS 鏈嶅姟绔細鏈湴 web TLS 鏈嶅姟鍑虹ず璇佷功锛?
+                              if getattr(a, "topology", "client") == "server"
+                              else "client锛圖UT 浣?TLS 瀹㈡埛绔細鑴氭湰鍋氫腑闂翠汉鏇挎崲瀵圭璇佷功锛?),
              "- 璁よ瘉瀵圭: %s:%d (SNI %s)" % (a.host, a.port, a.sni or a.host),
              "- DUT: %s    涓棿鐩? %s (%s)" % (a.src, a.proxy_host, iface_for(a.src)),
              "- 瀹為獙瀹?CA: " + os.path.join(a.certs_dir, "lab_root.crt"),
@@ -838,8 +878,10 @@ def write_outputs(a, results):
                   "- 閫傜敤鎬? " + v.get("applicability", "閫傜敤"),
                   "- 鐢ㄤ緥璇存槑: " + (cm.get("desc") or "-"),
                   "- 璁惧渚ф姄鍖? " + os.path.basename(v.get("pcap") or "-"),
-                  "- 璁℃暟: DUT ClientHello %d / 鏈嶅姟鍣?ServerHello %d / 鏈嶅姟鍣ㄨ瘉涔?%d / DUT 搴旂敤鏁版嵁 %d"
-                  % (v["ch"], v["sh"], v["cert"], v["appdata"]),
+                  ("- 璁℃暟: 鏈嶅姟绔嫇鎵戯紝鏃犱腑闂翠汉鎶撳寘锛堣瘉涔︿笌 TLS 鍙傛暟瑙?device_cert_facts.txt锛?
+                   if getattr(a, "topology", "client") == "server" else
+                   "- 璁℃暟: DUT ClientHello %d / 鏈嶅姟鍣?ServerHello %d / 鏈嶅姟鍣ㄨ瘉涔?%d / DUT 搴旂敤鏁版嵁 %d"
+                   % (v["ch"], v["sh"], v["cert"], v["appdata"])),
                   "- DUT 渚?TLS 鍛婅: " + (", ".join(v["alerts"]) or "锛堟棤锛汿LS1.3 鐨?alert 涓哄瘑鏂囨椂浠ユ棩蹇椾负鍑嗭級"),
                   "- 瀹㈡埛绔晶鎻℃墜澶辫触鏃ュ織: " + (v["client_fail"][0] if v["client_fail"] else "锛堟棤锛?),
                   "- 璧峰仠鍛戒护: " + (v.get("cmd") or "-"),
@@ -856,7 +898,9 @@ def write_outputs(a, results):
                                    client_fail=v["client_fail"],
                                    tds=TDS_SENTENCE.get(v["case"]["id"], "")) for v in results]),
                   fh, ensure_ascii=False, indent=2)
-    log("[out] " + os.path.abspath(a.out) + "  锛坰ummary.md / report.json / certs_summary.txt / device_*.pcap锛?)
+    log("[out] " + os.path.abspath(a.out) + "  锛坰ummary.md / report.json / certs_summary.txt"
+        + ("" if getattr(a, "topology", "client") == "server"
+           else " / device_*.pcap") + "锛?)
 
 
 # ---------------------------------------------------------------- 閫傜敤鎬у垽瀹氾紙鎸夊叿浣撴祴璇曟儏鍐碉級
@@ -873,11 +917,11 @@ def confidentiality_protected(a):
     return False, "鏈兘鍦?%s:%d 涓婂缓绔?TLS锛堝彲鑳芥槸涓嶅姞瀵嗙殑鑷畾涔夊崗璁級锛屾寜鏈哄瘑鎬ф湭鍙椾繚鎶ゅ鐞? % (a.host, a.port)
 
 
-def resolve_applicability(a):
+def resolve_applicability(a, reqs=None):
     """閫愭潯鍒ゅ畾"杩欐鍒板簳瑕佷笉瑕佽窇"锛岃繑鍥?{id: (bool, 鐞嗙敱)}銆?""
     prot, why_prot = confidentiality_protected(a)
     out = {}
-    for r in REQS:
+    for r in (reqs or REQS):
         app = r.get("app", "always")
         if app == "always":
             out[r["id"]] = (True, "鏍囧噯鏃犳潯浠惰姹?)
@@ -898,16 +942,23 @@ def resolve_applicability(a):
     return out
 
 
-def print_checklist(a, appl=None):
+def print_checklist(a, appl=None, reqs=None):
     """鎵撳嵃鏉℃瑕嗙洊娓呭崟锛氳繖鏉¤涓嶈璺戙€佺敤浠€涔堣瘉涔︺€佸垽瀹氭柟寮忋€?""
+    reqs = reqs or REQS
+    topo = getattr(a, "topology", "client")
     print("")
-    print("# [AU.AUM-3.CertificatePrivateKey] 瑕嗙洊娓呭崟锛?d 鏉★紝鏉℃暟鎸夊疄闄呮祴璇曟儏鍐靛喅瀹氾級" % len(REQS))
+    print("# [AU.AUM-3.CertificatePrivateKey] 瑕嗙洊娓呭崟 鈥斺€?鎷撴墤: %s"
+          % ("鏈嶅姟绔紙DUT 鍑虹ず鏈湴 web TLS 璇佷功锛? if topo == "server" else "瀹㈡埛绔紙DUT 鏍￠獙浜戠/涓婁綅鏈鸿瘉涔︼級"))
+    print("# 鍏?%d 鏉★紱鏉℃暟鎸夋爣鍑嗘潯娆句笌瀹為檯娴嬭瘯鎯呭喌鍐冲畾" % len(reqs))
     print("")
     print("| 鐢ㄤ緥 | 鏍囧噯鏉℃ | 鐢ㄤ緥鍐呭 | 鎵€闇€鏉愭枡 | 閫傜敤鎬?|")
     print("|---|---|---|---|---|")
-    for r in REQS:
-        cert = r.get("cert") and (r["cert"] + ".pem") or ("鏈満 openssl 澶嶇幇" if r["runner"] == "mismatch_key"
-                                                          else "褰曞埗+閲嶆斁")
+    for r in reqs:
+        cert = (r["cert"] + ".pem") if r.get("cert") else {
+            "probe": "璁惧鏈湴 web TLS 鏈嶅姟锛堢幇鍦洪噰闆嗭級",
+            "mismatch_key": "鏈満 openssl 澶嶇幇锛堣澶囪瘉涔?+ 鏀诲嚮鑰呯閽ワ級",
+            "replay": "褰曞埗 + 閲嶆斁",
+        }.get(r["runner"], "-")
         if appl:
             ok, why = appl[r["id"]]
             apptxt = ("閫傜敤" if ok else "N/A") + "锛? + why
@@ -991,9 +1042,196 @@ def precheck_env(a):
     return warns
 
 
+# ---------------------------------------------------------------- 鏈嶅姟绔嫇鎵戯紙DUT 鍑虹ず鏈湴 web TLS 璇佷功锛?def fetch_device_facts(a):
+    """鐩磋繛璁惧鏈湴 web TLS 绔彛锛岄噰闆嗗畠鍑虹ず鐨勮瘉涔︿笌 TLS 鍙傛暟锛圓uthVal 鍩虹嚎锛夈€?""
+    cmd = [OPENSSL, "s_client", "-connect", "%s:%d" % (a.host, a.port),
+           "-servername", a.sni or a.host, "-showcerts"]
+    rc, out = sh(cmd, timeout=a.timeout)
+    blocks = re.findall(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", out, re.S)
+    if not blocks:
+        return None
+    leaf = os.path.join(a.certs_dir, "device_cert.pem")
+    with open(leaf, "w", encoding="ascii") as fh:
+        fh.write(blocks[0] + "\n")
+    rc, info = sh([OPENSSL, "x509", "-in", leaf, "-noout", "-subject", "-issuer", "-serial", "-dates",
+                   "-fingerprint", "-sha256", "-ext",
+                   "subjectAltName,basicConstraints,keyUsage,extendedKeyUsage"])
+    def grab(pat, text, default=""):
+        m = re.search(pat, text)
+        return m.group(1).strip() if m else default
+    d = dict(leaf=leaf, info=info, chains=len(blocks), raw=out,
+             proto=grab(r"Protocol\s*:\s*(\S+)", out, "?"),
+             # OpenSSL 3 鐨?s_client 鍦?TLS1.3 涓嬫墦鍗扮殑鏄?"New, TLSv1.3, Cipher is TLS_AES_..."锛?             # 鑰佹牸寮忔墠鏄?"Cipher    : xxx"锛屼袱绉嶉兘瑕佽
+             cipher=(grab(r"Cipher\s+is\s+(\S+)", out, "") or grab(r"Cipher\s*:\s*(\S+)", out, "?")),
+             mtls=("No client certificate CA names sent" not in out))
+    for line in info.splitlines():
+        k, _, v = line.partition("=")
+        d[k.strip().lower().replace(" ", "_")] = v.strip()
+    d["san_dns"] = grab(r"DNS:([^,\s]+)", info, None)
+    return d
+
+
+def case_probe_cert(a, case):
+    """S0锛氭妸璁惧鍑虹ず鐨勮瘉涔?TLS 鍙傛暟鎽婂紑锛屽苟涓?E-Info 鏂囨。锛?-expect-tls/--expected-cn锛夋牳瀵瑰亸宸€?""
+    facts = getattr(a, "device_facts", None) or fetch_device_facts(a)
+    if not facts:
+        return dict(case=case, result="skip", note="杩炰笉涓?%s:%d锛屾垨瀵圭鎻℃墜鏃舵病鏈夊嚭绀鸿瘉涔? % (a.host, a.port),
+                    alerts=[], client_fail=[], ch=0, sh=0, cert=0, appdata=0)
+    lines = ["璇佷功 subject : " + str(facts.get("subject")),
+             "璇佷功 issuer  : " + str(facts.get("issuer")),
+             "搴忓垪鍙?鏈夋晥鏈? %s / %s ~ %s" % (facts.get("serial"), facts.get("notbefore"), facts.get("notafter")),
+             "璇佷功閾惧紶鏁?  : %d" % facts["chains"],
+             "SHA256 鎸囩汗  : " + str(facts.get("sha256_fingerprint")),
+             "SAN          : " + str(facts.get("san_dns")),
+             "TLS 鍗忚/濂椾欢: %s / %s" % (facts["proto"], facts["cipher"]),
+             "瑕佹眰瀹㈡埛绔瘉涔? %s" % ("鏄?鈥斺€?鍙彟鍋氬鎴风璇佷功璐熷悜鐢ㄤ緥" if facts["mtls"]
+                                     else "鍚︼紙鍗曞悜 TLS锛氳澶囦笉鏍￠獙瀵圭璇佷功锛宐ullet1/3/4 鐨勩€庣敤閿欒璇佷功瀹屾垚璁よ瘉銆忚矾寰勪笉瀛樺湪锛?)]
+    dev = []
+    if a.expect_tls and facts["proto"] and a.expect_tls.lower() not in str(facts["proto"]).lower():
+        dev.append("TLS 鐗堟湰涓?E-Info 鏂囨。涓嶄竴鑷达紙鏂囨。 %s / 瀹炴祴 %s锛? % (a.expect_tls, facts["proto"]))
+    if a.expected_cn:
+        blob = "%s %s" % (facts.get("subject"), facts.get("san_dns"))
+        if a.expected_cn not in blob:
+            dev.append("CN/SAN 涓?E-Info 鏂囨。涓嶄竴鑷达紙鏂囨。 %s / 瀹炴祴 subject=%s SAN=%s锛?
+                       % (a.expected_cn, facts.get("subject"), facts.get("san_dns")))
+    result = "fail" if dev else "pass"
+    note = "锛?.join(dev) if dev else "璇佷功涓?TLS 鍙傛暟宸查噰闆嗗苟鐣欐。锛屾湭鍙戠幇涓?E-Info 鏂囨。鐨勪笉涓€鑷撮」"
+    return dict(case=case, result=result, note=note, alerts=[], client_fail=[], ch=1, sh=0, cert=1, appdata=0,
+                raw="\n".join(lines), cmd="openssl s_client -connect %s:%d -showcerts" % (a.host, a.port),
+                facts=facts)
+
+
+def case_impersonate_serve(a, case, certpem):
+    """S3a/S3b/S3c/S4锛氭祴璇曞彴鎵紨"璇ヨ澶囩殑鏈湴 web TLS 鏈嶅姟"锛岀敤閿欒璇佷功璧?TLS 鏈嶅姟锛?    鍐嶇敤涓€涓弗鏍兼牎楠岀殑瀹㈡埛绔紙鎶婅澶囪嚜韬瘉涔︿綔涓哄敮涓€淇′换閿氾級鍘昏繛 鈥斺€?鐪嬭繖浜涜瘉涔﹁兘鍚﹁鐢ㄦ潵
+    鍐掑厖璇ヨ澶囧畬鎴愯璇併€傝澶囨湰韬笉鍙備笌杩欎竴鏍￠獙锛堟湇鍔＄鎷撴墤閲屽嚭绀鸿瘉涔︾殑鏄澶囷級銆?""
+    port = a.impersonate_port
+    srv = [OPENSSL, "s_server", "-accept", "127.0.0.1:%d" % port, "-cert", certpem, "-key", certpem,
+           "-www", "-naccept", "2"]
+    try:
+        proc = subprocess.Popen(srv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except OSError as exc:
+        return dict(case=case, result="error", note="璧蜂笉浜?openssl s_server: %s" % exc,
+                    alerts=[], client_fail=[], ch=0, sh=0, cert=0, appdata=0)
+    time.sleep(1.5)
+    cli = [OPENSSL, "s_client", "-connect", "127.0.0.1:%d" % port, "-servername", a.sni or a.host,
+           "-CAfile", os.path.join(a.certs_dir, "anchor_leaf.pem"), "-partial_chain", "-verify_return_error"]
+    rc, out = sh(cli, timeout=25)
+    try:
+        proc.terminate()
+    except Exception:
+        pass
+    if "Verify return code: 0 (ok)" in out:
+        res, note = "fail", "鏍￠獙鍨嬪鎴风绔熺劧鎺ュ彈浜嗚璇佷功骞跺畬鎴愬埌鈥滆澶団€濈殑璁よ瘉 鈥斺€?璇ヨ韩浠藉彲琚啋鐢紝闇€涓婃姤"
+    elif "verify error" in out.lower() or "Verify return code" in out or rc != 0:
+        m = re.search(r"verify error:num=\d+:(.*)", out)
+        res, note = "pass", "鏍￠獙鍨嬪鎴风鎷掔粷璇ヨ瘉涔︼紙%s锛夛紝涓嶈兘鐢ㄤ簬鍐掑厖璇ヨ澶囧畬鎴愯璇? % (
+            (m.group(1).strip() if m else "verify failed"))
+    else:
+        res, note = "skip", "瀹㈡埛绔涓烘棤娉曞垽瀹氾細" + tail3(out)
+    return dict(case=case, result=res, note=note, alerts=[], client_fail=[], ch=1, sh=0, cert=0, appdata=0,
+                raw=tail3(out), cmd=" ".join(srv) + "  ||  " + " ".join(cli))
+
+
+def run_server_suite(a):
+    """鏈嶅姟绔嫇鎵戜富娴佺▼锛氫笉鍋?iptables/DNAT/涓棿浜猴紝鏀逛负"閲囬泦璁惧鑷韩璇佷功 + 鍐掔敤瀹為獙"銆?""
+    log("[1/3] 閲囬泦璁惧鏈湴 web TLS 鏈嶅姟锛?s:%d锛夊嚭绀虹殑璇佷功涓?TLS 鍙傛暟 ..." % (a.host, a.port))
+    facts = fetch_device_facts(a)
+    if not facts:
+        log("[error] 杩炰笉涓?%s:%d锛屾垨鎻℃墜鏃跺绔病鏈夊嚭绀鸿瘉涔? % (a.host, a.port))
+        return 2
+    a.device_facts = facts
+    log("[cert] subject = %s" % facts.get("subject"))
+    log("[cert] issuer  = %s   搴忓垪鍙?= %s" % (facts.get("issuer"), facts.get("serial")))
+    log("[cert] 鏈夋晥鏈? = %s ~ %s" % (facts.get("notbefore"), facts.get("notafter")))
+    log("[cert] 鎸囩汗    = %s" % facts.get("sha256_fingerprint"))
+    log("[tls ] %s / %s   瑕佹眰瀹㈡埛绔瘉涔?= %s" % (facts["proto"], facts["cipher"], facts["mtls"]))
+    with open(os.path.join(a.out, "device_cert_facts.txt"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join([facts["info"], "", "Protocol: %s" % facts["proto"],
+                             "Cipher: %s" % facts["cipher"],
+                             "Requests client certificate: %s" % facts["mtls"],
+                             "", "--- openssl s_client 鍘熸枃 ---", facts["raw"]]))
+    log("[2/3] 鐢熸垚閿欒璇佷功锛堣韩浠界収鎶勮澶囪嚜韬瘉涔?%s锛?.." % os.path.basename(facts["leaf"]))
+    a.cert_map = gen_certs(a)
+    if not a.cert_map:
+        log("[error] 閿欒璇佷功鐢熸垚澶辫触锛堢湅涓婇潰鐨?openssl 鎶ラ敊锛?)
+        return 2
+    if a.selftest and selftest(a) != 0:
+        log("[error] 鑷涓嶉€氳繃锛氳瘉涔︿笉绗﹀悎棰勬湡")
+        return 2
+    if a.gen_only:
+        log("[done] --gen-only锛氳瘉涔﹀凡鐢熸垚锛屾湭璺戝啋鐢ㄥ疄楠?)
+        print(open(os.path.join(a.out, "certs_summary.txt"), encoding="utf-8").read())
+        return 0
+    appl = resolve_applicability(a, SERVER_REQS)
+    print_checklist(a, appl, SERVER_REQS)
+    if a.replay:
+        appl["S2"] = (True, "浜哄伐瑕佹眰锛?-replay 寮哄埗鍋氶噸鏀惧疄楠?)
+    wanted = [r["id"] for r in SERVER_REQS] if a.cases in ("auto", "") else [x.strip() for x in a.cases.split(",")]
+    log("[3/3] 閫愭潯鎵ц锛堟湇鍔＄鎷撴墤锛氬啋鐢ㄥ疄楠屽湪鏈満 127.0.0.1:%d 涓婂仛锛?.." % a.impersonate_port)
+    results = []
+    for case in SERVER_REQS:
+        if case["id"] not in wanted:
+            continue
+        ok, why = appl[case["id"]]
+        if not ok:
+            log("[%s] N/A 鈥斺€?%s" % (case["id"], why))
+            results.append(dict(case=case, result="n/a", note=why, applicability="N/A锛? + why,
+                                alerts=[], client_fail=[], ch=0, sh=0, cert=0, appdata=0))
+            continue
+        if case["runner"] == "probe":
+            v = case_probe_cert(a, case)
+        elif case["runner"] == "mismatch_key":
+            log("[%s] 鏈満澶嶇幇锛氳澶囪嚜韬瘉涔?+ 鏀诲嚮鑰呯閽ヨ兘鍚︽瀯鎴愮鐐? % case["id"])
+            v = case_mismatched_key(a, case)
+        elif case["runner"] == "impersonate":
+            pem = (a.cert_map or {}).get(case.get("cert_key") or case["id"], {}).get("pem")
+            if not pem:
+                results.append(dict(case=case, result="skip", note="缂鸿瘉涔︽潗鏂欙紙%s锛? % case.get("cert"),
+                                    applicability=why, alerts=[], client_fail=[], ch=0, sh=0, cert=0, appdata=0))
+                continue
+            log("[%s] 鍐掔敤瀹為獙锛氱敤 %s 鎵紨璁惧 web TLS 鏈嶅姟" % (case["id"], os.path.basename(pem)))
+            v = case_impersonate_serve(a, case, pem)
+        elif case["runner"] == "replay":
+            if a.replay:
+                v = dict(case=case, result="skip",
+                         note="鏈嶅姟绔嫇鎵戜笅鐨勯噸鏀惧疄楠岄渶瑕佸厛鍦ㄨ绔彛鎶撳埌涓€娆＄湡瀹?web 绠＄悊瀹㈡埛绔殑鎻℃墜锛?
+                              "鏈ā寮忔殏鍙垽鏉′欢鏄惁鎴愮珛锛?-topology client 鐨?--replay 鍙洿鎺ュ仛锛?,
+                         alerts=[], client_fail=[], ch=0, sh=0, cert=0, appdata=0)
+            else:
+                v = dict(case=case, result="n/a", note=replay_applicability(a),
+                         alerts=[], client_fail=[], ch=0, sh=0, cert=0, appdata=0)
+        else:
+            continue
+        v.setdefault("applicability", why)
+        results.append(v)
+        time.sleep(1)
+    write_outputs(a, results)
+    log("[done] 姹囨€?)
+    print("")
+    print("  " + "  ".join("%s=%s" % (v["case"]["id"], v["result"]) for v in results))
+    fails = [v for v in results if v["result"] == "fail"]
+    skips = [v for v in results if v["result"] in ("skip", "error")]
+    if fails:
+        print("[verdict] 鏈夌敤渚嬩笉绗﹀悎锛坒ail锛夛細AUM-3 涓嶈兘鍒?PASS")
+        return 1
+    if skips:
+        print("[verdict] 鏈夌敤渚嬭瘉鎹笉瓒筹紙skip/error锛夛細鍏堝鐞嗗啀鍒ゅ畾")
+        return 2
+    print("[verdict] 鏈嶅姟绔嫇鎵戯細璁惧璇佷功灞炴€у悎瑙勪笖涓嶅彲琚啋鐢?鈥斺€?鏈閫傜敤椤瑰垽瀹?PASS"
+          "锛堣澶囨槸鍚︿负鍗曞悜 TLS銆佹槸鍚﹁姹傚鎴风璇佷功瑙?S0 涓?summary.md锛?)
+    return 0
+
+
 # ---------------------------------------------------------------- 涓绘祦绋?def build_parser():
     ap = argparse.ArgumentParser(description="[AU.AUM-3.CertificatePrivateKey] 浜斿紶閿欒璇佷功鍙栬瘉")
-    ap.add_argument("--target", help="璁よ瘉瀵圭 host:port锛堜簯涓嬪彂鍦烘櫙濉簯鏈嶅姟鍦板潃锛屽 cloud.example.com:18888锛?)
+    ap.add_argument("--topology", choices=["client", "server"], default="client",
+                    help="client=DUT 浣?TLS 瀹㈡埛绔紙鑴氭湰鍋氫腑闂翠汉鏇挎崲瀵圭璇佷功锛夛紱"
+                         "server=DUT 浣?TLS 鏈嶅姟绔紙鏈湴 web TLS 鏈嶅姟鍑虹ず璇佷功锛屽仛閲囬泦+鍐掔敤瀹為獙锛?)
+    ap.add_argument("--impersonate-port", type=int, default=8443,
+                    help="server 鎷撴墤锛氭祴璇曞彴鎵紨璁惧 web TLS 鏈嶅姟鏃剁洃鍚殑鏈湴绔彛锛堥粯璁?8443锛?)
+    ap.add_argument("--expect-tls", default=None,
+                    help="E-Info 鏂囨。閲屽啓鐨?TLS 鐗堟湰锛堝 TLSv1.3锛夛紝S0 鐢ㄥ畠鏍稿鍋忓樊")
+    ap.add_argument("--target", help="璁よ瘉瀵圭 host:port锛坈lient=浜戞湇鍔″湴鍧€锛泂erver=璁惧鏈湴 web TLS 鍦板潃锛屽 192.0.2.10:443锛?)
     ap.add_argument("--sni", default=None, help="TLS SNI锛岄粯璁ゅ彇 target 涓绘満鍚?)
     ap.add_argument("--src", default=None, help="DUT IP锛堝彧鍔寔/鎶撹婧愮殑娴侀噺锛?)
     ap.add_argument("--proxy-host", default=None, help="DNAT 鐩殑鍦板潃锛堣窇 mitmproxy 鐨勬湰鏈?IP锛夛紱榛樿鑷姩閫変笌 DUT 鍚岀綉娈?)
@@ -1033,16 +1271,27 @@ def precheck_env(a):
 def wizard(a):
     print("")
     print("=== [AU.AUM-3.CertificatePrivateKey] 鍙栬瘉鍚戝锛堢洿鎺ュ洖杞︾敤鏂规嫭鍙烽噷鐨勯粯璁ゅ€硷級===")
-    print("  鍦烘櫙鎻愮ず锛欴UT 鐢ㄨ瘉涔﹁璇佸绔€傝嫢瀵圭璇佷功鏉ヨ嚜浜戞湇鍔″櫒涓嬪彂锛?)
-    print("  绗?1 闂濉€愪簯鏈嶅姟鍦板潃銆戯紝涓嶈濉?DUT 鑷繁鐨勫湴鍧€銆?)
+    print("  鍏堥€夋嫇鎵戯細琚祴璁惧鍦ㄨ繖鏉¤璇侀噷鏄鎴风杩樻槸鏈嶅姟绔€?)
+    print("   1 = 瀹㈡埛绔細DUT 鍘昏繛浜戠/涓婁綅鏈哄苟鏍￠獙瀵圭璇佷功锛堣剼鏈仛涓棿浜猴紝鏇挎崲瀵圭璇佷功锛?)
+    print("   2 = 鏈嶅姟绔細DUT 鐨勬湰鍦?web TLS 鏈嶅姟鍑虹ず璇佷功缁?web 绠＄悊瀹㈡埛绔紙閲囬泦鑷韩璇佷功 + 鍐掔敤瀹為獙锛?)
     print("")
-    a.target = ask("1/6 璁よ瘉瀵圭鍦板潃 host:port锛堜簯涓嬪彂锛氬 cloud.example.com:18888锛?, a.target or "")
-    a.src = ask("2/6 琚祴璁惧 DUT 鐨?IP锛堝彧鍔寔瀹冪殑娴侀噺锛?, a.src or "")
+    pick = ask("1/7 鎷撴墤 (1=瀹㈡埛绔?/ 2=鏈嶅姟绔?", "1" if a.topology == "client" else "2").strip()
+    a.topology = "server" if pick.startswith("2") else "client"
+    if a.topology == "server":
+        a.target = ask("2/7 璁惧鏈湴 web TLS 鍦板潃 host:port锛堝 192.0.2.10:443锛?, a.target or "")
+        a.expected_cn = ask("3/7 E-Info 鏂囨。閲岀殑璇佷功 CN/SAN锛堟牳瀵瑰亸宸敤锛屽洖杞﹁烦杩囷級", a.expected_cn or "")
+        a.expect_tls = ask("4/7 E-Info 鏂囨。閲岀殑 TLS 鐗堟湰锛堝 TLSv1.3锛屽洖杞﹁烦杩囷級", a.expect_tls or "")
+        a.proxy_host = ask("5/7 鏈満鍦板潃锛堟湰鎷撴墤涓嶇敤 DNAT锛屽洖杞﹁烦杩囷級", a.proxy_host or "")
+        a.live = int(ask("6/7 瑙傚療绐楀彛绉掓暟锛堟湰鎷撴墤鍩烘湰鐢ㄤ笉鍒帮級", str(a.live)) or a.live)
+        a.label = ask("7/7 璇佹嵁鏂囦欢鍚嶅墠缂€", a.label)
+        return a
+    a.target = ask("2/7 璁よ瘉瀵圭鍦板潃 host:port锛堜簯涓嬪彂锛氬 cloud.example.com:18888锛?, a.target or "")
+    a.src = ask("3/7 琚祴璁惧 DUT 鐨?IP锛堝彧鍔寔瀹冪殑娴侀噺锛?, a.src or "")
     default_int = ",".join(a.intercept) or (a.target or "")
-    a.intercept = [x for x in re.split(r"[,\s]+", ask("3/6 瑕侀€忔槑鍔寔鐨勭洰鏍?host:port锛堜竴鑸悓绗?1 闂級", default_int)) if x]
-    a.proxy_host = ask("4/6 鏈満鍦?DUT 鍚岀綉娈电殑鍦板潃锛圖NAT 鐩殑锛涘洖杞﹁嚜鍔ㄦ帰娴嬶級", a.proxy_host or "")
-    a.live = int(ask("5/6 姣忎釜鐢ㄤ緥瑙傚療绐楀彛绉掓暟", str(a.live)) or a.live)
-    a.label = ask("6/6 璇佹嵁鏂囦欢鍚嶅墠缂€", a.label)
+    a.intercept = [x for x in re.split(r"[,\s]+", ask("4/7 瑕侀€忔槑鍔寔鐨勭洰鏍?host:port锛堜竴鑸悓绗?2 闂級", default_int)) if x]
+    a.proxy_host = ask("5/7 鏈満鍦?DUT 鍚岀綉娈电殑鍦板潃锛圖NAT 鐩殑锛涘洖杞﹁嚜鍔ㄦ帰娴嬶級", a.proxy_host or "")
+    a.live = int(ask("6/7 姣忎釜鐢ㄤ緥瑙傚療绐楀彛绉掓暟", str(a.live)) or a.live)
+    a.label = ask("7/7 璇佹嵁鏂囦欢鍚嶅墠缂€", a.label)
     return a
 
 
@@ -1054,7 +1303,7 @@ def main():
     except Exception:
         pass
     a = build_parser().parse_args()
-    if a.list:                      # 瑕嗙洊娓呭崟涓嶉渶瑕佺洰鏍囷紝鍏堟妸"瑕佽窇鍝嚑鏉?鎽婂紑缁欏鏍镐汉鐪?        print_checklist(a)
+    if a.list:                      # 瑕嗙洊娓呭崟涓嶉渶瑕佺洰鏍囷紝鍏堟妸"瑕佽窇鍝嚑鏉?鎽婂紑缁欏鏍镐汉鐪?        print_checklist(a, None, SERVER_REQS if a.topology == "server" else REQS)
         return 0
     if a.target:
         a.target = a.target.replace("\ufeff", "").strip()
@@ -1075,6 +1324,11 @@ def main():
     os.makedirs(a.certs_dir, exist_ok=True)
     a.out = a.out or os.path.join("evidence", "%s_%s" % (a.label, datetime.datetime.now().strftime("%Y%m%d_%H%M%S")))
     os.makedirs(a.out, exist_ok=True)
+    if a.topology == "server":       # DUT 浣?TLS 鏈嶅姟绔細閲囬泦鑷韩璇佷功 + 鍐掔敤瀹為獙锛屼笉鐢?iptables
+        if a.rules_only:
+            log("[error] --rules-only 鍙敤浜?client 鎷撴墤锛坕ptables 鍔寔锛夛紱server 鎷撴墤涓嶉渶瑕?)
+            return 2
+        return run_server_suite(a)
     if not a.intercept and a.transparent:
         a.intercept = ["%s:%d" % (a.host, a.port)]
     if a.intercept:
