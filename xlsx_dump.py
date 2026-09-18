@@ -1,7 +1,7 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""xlsx_dump.py - 鍙瀵煎嚭 xlsx 鐨勫崟鍏冩牸鏂囨湰锛坰tdin 鏃犲叧锛岀函鏍囧噯搴擄級
-鐢ㄦ硶: python3 xlsx_dump.py <book.xlsx> --list
+"""xlsx_dump.py - 只读导出 xlsx 的单元格文本（stdin 无关，纯标准库）
+用法: python3 xlsx_dump.py <book.xlsx> --list
       python3 xlsx_dump.py <book.xlsx> --sheet AUM-3 [--rows 130-160] [--tsv]
 """
 import sys, re, zipfile
@@ -44,7 +44,7 @@ def dump(path, sheet, rows=None, tsv=False):
     z, shared, sheets = load(path)
     target = dict(sheets).get(sheet)
     if target is None:
-        print('sheet 涓嶅瓨鍦? %s' % sheet, file=sys.stderr)
+        print('sheet 不存在: %s' % sheet, file=sys.stderr)
         return 2
     root = ET.fromstring(z.read(target))
     out = {}

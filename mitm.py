@@ -1,26 +1,26 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import readline
 import subprocess
 
-浠嬬粛 = """----涓棿浜烘敾鍑昏嚜鍔ㄨ剼鏈?iptables+mitmproxy)----
-- 鏍规嵁杈撳叆鐨処P鍦板潃涓庣鍙ｈ嚜鍔ㄦ坊鍔爄ptables瑙勫垯
-- 鑷姩鍚姩mitmproxy
-- 鏀寔澶氫釜鏈嶅姟鍣ㄥ煙鍚嶆垨ip
-- 閫€鍑簃itmproxy鍚庤嚜鍔ㄥ垹闄ptables瑙勫垯
+介绍 = """----中间人攻击自动脚本(iptables+mitmproxy)----
+- 根据输入的IP地址与端口自动添加iptables规则
+- 自动启动mitmproxy
+- 支持多个服务器域名或ip
+- 退出mitmproxy后自动删除iptables规则
 """
 
-print(浠嬬粛)
+print(介绍)
 
-src_ip = input("婧愬湴鍧€(璁惧ip): ")
-src_port = input("婧愮鍙?鍙€夛紝鐣欑┖鍒欎笉鎸囧畾): ").strip()
+src_ip = input("源地址(设备ip): ")
+src_port = input("源端口(可选，留空则不指定): ").strip()
 dst_ips = (
-    input("鐩殑鍦板潃(鏈嶅姟鍣ㄥ湴鍧€,鍙互鏄煙鍚? 澶氫釜浣跨敤閫楀彿鍒嗛殧): ").strip().split(",")
+    input("目的地址(服务器地址,可以是域名? 多个使用逗号分隔): ").strip().split(",")
 )
-dst_port = input("鐩殑绔彛(鍙€夛紝鐣欑┖鍒欎笉鎸囧畾): ").strip()
+dst_port = input("目的端口(可选，留空则不指定): ").strip()
 
 for ip in dst_ips:
     ip = ip.strip()
-    # 鏋勯€爄ptables鍛戒护
+    # 构造iptables命令
     iptables_cmd = [
         "sudo",
         "iptables",
@@ -40,20 +40,20 @@ for ip in dst_ips:
     if dst_port:
         iptables_cmd += ["--dport", dst_port]
     iptables_cmd += ["-j", "DNAT", "--to-destination", "172.16.0.1:8084"]
-    print(f"娣诲姞iptables瑙勫垯: {ip}")
+    print(f"添加iptables规则: {ip}")
 
     try:
         subprocess.run(iptables_cmd, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"娣诲姞iptables瑙勫垯澶辫触: {e}")
+        print(f"添加iptables规则失败: {e}")
         exit(1)
 
-    # 鏄剧ず褰撳墠瑙勫垯
+    # 显示当前规则
     subprocess.run(["sudo", "iptables", "-t", "nat", "-L", "--line-numbers"])
 
-    input("鎸夊洖杞︾户缁紝楠岃瘉瀹屾瘯鍚庡皢鍒犻櫎瑙勫垯...")
+    input("按回车继续，验证完毕后将删除规则...")
 
-    # 鍚姩mitmproxy
+    # 启动mitmproxy
     mitmproxy_cmd = [
         "mitmdump",
         "--rawtcp",
@@ -63,13 +63,14 @@ for ip in dst_ips:
         "transparent",
         "--showhost",
     ]
-    print("鍚姩mitmproxy锛屾寜Ctrl+C閫€鍑?..")
+    print("启动mitmproxy，按Ctrl+C退出...")
     try:
         subprocess.call(mitmproxy_cmd)
     except KeyboardInterrupt:
-        print("mitmproxy宸查€€鍑猴紝鍑嗗鍒犻櫎iptables瑙勫垯銆?)
+        print("mitmproxy已退出，准备删除iptables规则。")
     finally:
-    # 鍒犻櫎鍒氭墠娣诲姞鐨勮鍒?        iptables_del_cmd = [
+    # 删除刚才添加的规则
+        iptables_del_cmd = [
             "sudo",
             "iptables",
             "-t",
@@ -91,6 +92,6 @@ for ip in dst_ips:
         try:
             subprocess.run(iptables_del_cmd, check=True)
         except subprocess.CalledProcessError as e:
-            print(f"鍒犻櫎iptables瑙勫垯澶辫触: {e}")
+            print(f"删除iptables规则失败: {e}")
             exit(1)
-        print(f"宸插垹闄ptables瑙勫垯: {ip}\n")
+        print(f"已删除iptables规则: {ip}\n")
