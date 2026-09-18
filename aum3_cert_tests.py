@@ -1084,14 +1084,23 @@ def precheck_env(a):
 
 
 # ---------------------------------------------------------------- 服务端拓扑（DUT 出示本地 web TLS 证书）
-def fetch_device_facts(a):
-    """直连设备本地 web TLS 端口，采集它出示的证书与 TLS 参数（AuthVal 基线）。"""
+def fetch_device_facts(a, allow_cache=True):
+    """直连设备本地 web TLS 端口，采集它出示的证书与 TLS 参数（AuthVal 基线）。
+    连不上但 --certs-dir 里已有上次采到的 device_cert.pem 时，允许离线复用（--gen-only 用）。"""
     cmd = [OPENSSL, "s_client", "-connect", "%s:%d" % (a.host, a.port),
            "-servername", a.sni or a.host, "-showcerts"]
     rc, out = sh(cmd, timeout=a.timeout)
     blocks = re.findall(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", out, re.S)
     if not blocks:
-        return None
+        cached = os.path.join(a.certs_dir, "device_cert.pem")
+        if allow_cache and os.path.exists(cached):
+            log("[warn] 现场连不上 %s:%d，改用已缓存的设备证书 %s（离线生成证书用；请确认它仍是设备当前证书）"
+                % (a.host, a.port, cached))
+            with open(cached, encoding="ascii") as fh:
+                blocks = [fh.read().strip()]
+            out = "(offline: 复用已缓存的设备证书，未现场握手)"
+        else:
+            return None
     leaf = os.path.join(a.certs_dir, "device_cert.pem")
     with open(leaf, "w", encoding="ascii") as fh:
         fh.write(blocks[0] + "\n")
